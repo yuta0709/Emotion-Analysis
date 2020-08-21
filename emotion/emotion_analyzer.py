@@ -5,12 +5,12 @@ import os
 import ctypes.test.test_objects
 from ibm_watson import NaturalLanguageUnderstandingV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_cloud_sdk_core import ApiException
 from ibm_watson import LanguageTranslatorV3
 from ibm_watson.natural_language_understanding_v1 import Features, EmotionOptions
 
 
-def Translate(apiKey,apiUrl,inputText):
-
+def Translate(apiKey, apiUrl, inputText):
     authenticator = IAMAuthenticator(apiKey)
     language_translator = LanguageTranslatorV3(
         version='2018-05-01',
@@ -23,9 +23,8 @@ def Translate(apiKey,apiUrl,inputText):
         text=inputText,
         model_id='ja-en').get_result()
     # print(translation)
-    result =translation['translations'][0]['translation']
+    result = translation['translations'][0]['translation']
     return result
-
 
 
 def NaturalLanguageAnalyzer(apiKey, apiUrl, inputText):
@@ -44,8 +43,12 @@ def NaturalLanguageAnalyzer(apiKey, apiUrl, inputText):
     result = json.dumps(response, indent=2)
     return result
 
+
 def NaturalLanguageAnalyzerWrapper(translateApiKey, translateApiUrl, analyzerApiKey, analyzerApiurl, inputText):
-    result = Translate(translateApiKey, translateApiUrl, inputText)
-    return NaturalLanguageAnalyzer(analyzerApiKey,analyzerApiurl,result)
-
-
+    english_text = Translate(translateApiKey, translateApiUrl, inputText)
+    try:
+        result = NaturalLanguageAnalyzer(analyzerApiKey, analyzerApiurl, english_text)
+    except ApiException:
+        return False
+    else:
+        return result
